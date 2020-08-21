@@ -67,7 +67,11 @@ async function scrape() {
     link: (cell) => {
       $(cell)
         .find("img")
-        .each((index, el) => $(el).remove());
+        .each((index, el) => $(el).attr(
+                "src",
+                `https://oklahomacounty.legistar.com/${$(el).attr("src")}`
+              ));
+
       $(cell)
         .find("a")
         .each(function (index, el) {
