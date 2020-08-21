@@ -2,11 +2,11 @@ const cheerio = require("cheerio");
 const axios = require("axios");
 const express = require("express");
 const app = express();
-const wakeUpDyno = require("./awaken-dyno.js"); 
+const wakeUpDyno = require("./awaken-dyno.js");
 
 port = process.env.PORT || 5335;
 
-const DYNO_URL = `https://occc-calendar.herokuapp.com/`
+const DYNO_URL = `https://occc-calendar.herokuapp.com/`;
 const URL = `https://oklahomacounty.legistar.com/Calendar.aspx`;
 
 const NAME = "Name";
@@ -43,7 +43,7 @@ const titleCase = (str) => {
 const li = (item, prop) => {
   let _li = "";
   if (item[prop]) {
-    if (item.type === "link") {
+    if (prop != LOCATION) {
       let val = item[prop].indexOf("href") > -1 ? item[prop] : "none";
       _li = `<li>${titleCase(prop)} : ${val}</li>`;
     } else {
@@ -66,13 +66,6 @@ async function scrape() {
     text: (cell) => $(cell).text().trim(),
     link: (cell) => {
       $(cell)
-        .find("img")
-        .each((index, el) => $(el).attr(
-                "src",
-                `https://oklahomacounty.legistar.com/${$(el).attr("src")}`
-              ));
-
-      $(cell)
         .find("a")
         .each(function (index, el) {
           let fileLocation = $(el).attr("href");
@@ -84,6 +77,17 @@ async function scrape() {
               )
               .removeAttr("class")
               .removeAttr("id");
+          } else {
+              $(el).remove()
+          }
+        });
+
+      $(cell)
+        .find("img")
+        .each(function (index, el) {
+          let _src = $(el).attr("src");
+          if (_src) {
+            $(el).attr("src", `https://oklahomacounty.legistar.com/${_src}`);
           } else {
             $(el).remove();
           }
