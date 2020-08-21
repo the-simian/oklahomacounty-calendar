@@ -78,7 +78,7 @@ async function scrape() {
               .removeAttr("class")
               .removeAttr("id");
           } else {
-              $(el).remove()
+            $(el).remove();
           }
         });
 
@@ -87,7 +87,10 @@ async function scrape() {
         .each(function (index, el) {
           let _src = $(el).attr("src");
           if (_src) {
-            $(el).attr("src", `https://oklahomacounty.legistar.com/${_src}`);
+            $(el)
+              .attr("src", `https://oklahomacounty.legistar.com/${_src}`)
+              .removeAttr("class")
+              .removeAttr("id");
           } else {
             $(el).remove();
           }
