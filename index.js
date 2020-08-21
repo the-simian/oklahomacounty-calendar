@@ -91,7 +91,7 @@ async function scrape() {
   return calendarReadyItems;
 }
 
-app.use("/occc-calendar", async (req, res, next) => {
+app.use("/", async (req, res, next) => {
   let data = null;
 
   try {
