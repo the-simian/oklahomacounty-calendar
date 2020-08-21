@@ -3,7 +3,7 @@ const axios = require("axios");
 const express = require("express");
 const app = express();
 
-port = process.env.port || 5335;
+port = process.env.PORT || 5335;
 
 const URL = `https://oklahomacounty.legistar.com/Calendar.aspx`;
 
