@@ -1,5 +1,9 @@
 const cheerio = require("cheerio");
 const axios = require("axios");
+const express = require("express");
+const app = express();
+
+port = process.env.port || 5335;
 
 const URL = `https://oklahomacounty.legistar.com/Calendar.aspx`;
 
@@ -26,7 +30,8 @@ const colDefinition = [
 
 const hours = (n) => n * 60 * 60 * 1000;
 
-const li = (item, prop) => item[prop] ? `<li>${prop.toLowerCase()}:${item[prop]}</li>` : '';
+const li = (item, prop) =>
+  item[prop] ? `<li>${prop.toLowerCase()}:${item[prop]}</li>` : "";
 
 async function fetchHTML(url) {
   const { data } = await axios.get(url);
@@ -38,7 +43,17 @@ async function scrape() {
 
   const strategies = {
     text: (cell) => $(cell).text().trim(),
-    link: (cell) => $(cell).html().trim(),
+    link: (cell) => {
+       
+        $(cell).find('a').each(function(index, el){
+            $(el)
+                .attr('href', `https://oklahomacounty.legistar.com/${$(el).attr('href')}`)
+                .removeAttr('class')
+                .removeAttr('id')
+        })
+
+        return $(cell).html()
+    },
     none: () => null,
   };
 
@@ -61,16 +76,37 @@ async function scrape() {
     let endDateTime = new Date(startDateTime.getTime() + hours(2));
     return {
       summary: `${item[NAME]}`,
-      description: `<span> Oklahoma County ${item[NAME]}</span><ul>${li(item,LOCATION)}${li(item,DETAILS)}${li(item,AGENDA)}${item,li(MINUTES)}${item,li(VIDEO)}</ul>`,
+      description: `<span> Oklahoma County ${item[NAME]}</span><ul>${li(
+        item,
+        LOCATION
+      )}${li(item, DETAILS)}${li(item, AGENDA)}${(item, li(MINUTES))}${
+        (item, li(VIDEO))
+      }</ul>`,
       location: `${item[LOCATION]} Oklahoma City, Oklahoma`,
       startDateTime: startDateTime.toISOString(),
       endDateTime: endDateTime.toISOString(),
     };
   });
 
-  console.log(calendarReadyItems);
-
   return calendarReadyItems;
 }
 
-scrape();
+app.use("/occc-calendar", async (req, res, next) => {
+  let data = null;
+
+  try {
+    data = await scrape();
+  } catch (err) {
+    res.send(err);
+  }
+
+  if (data) {
+    res.send(data);
+  }
+
+  next();
+});
+
+app.listen(port, function () {
+  console.log(`Running on ${port}`);
+});
