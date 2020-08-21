@@ -30,8 +30,22 @@ const colDefinition = [
 
 const hours = (n) => n * 60 * 60 * 1000;
 
-const li = (item, prop) =>
-  item[prop] ? `<li>${prop.toLowerCase()}:${item[prop]}</li>` : "";
+const titleCase = (str) => {
+  str = str.toLowerCase().split(" ");
+  for (var i = 0; i < str.length; i++) {
+    str[i] = str[i].charAt(0).toUpperCase() + str[i].slice(1);
+  }
+  return str.join(" ");
+};
+
+const li = (item, prop) => {
+  let _li = "";
+  if (item[prop]) {
+    let val = item[prop].indexOf("href") > -1 ? item[prop] : "none";
+    _li = `<li>${titleCase(prop)} : ${val}</li>`;
+  }
+  return _li;
+};
 
 async function fetchHTML(url) {
   const { data } = await axios.get(url);
@@ -44,15 +58,24 @@ async function scrape() {
   const strategies = {
     text: (cell) => $(cell).text().trim(),
     link: (cell) => {
-       
-        $(cell).find('a').each(function(index, el){
+      $(cell)
+        .find("a")
+        .each(function (index, el) {
+          let fileLocation = $(el).attr("href");
+          if (fileLocation) {
             $(el)
-                .attr('href', `https://oklahomacounty.legistar.com/${$(el).attr('href')}`)
-                .removeAttr('class')
-                .removeAttr('id')
-        })
+              .attr(
+                "href",
+                `https://oklahomacounty.legistar.com/${fileLocation}`
+              )
+              .removeAttr("class")
+              .removeAttr("id");
+          } else {
+            $(el).remove();
+          }
+        });
 
-        return $(cell).html()
+      return $(cell).html();
     },
     none: () => null,
   };
