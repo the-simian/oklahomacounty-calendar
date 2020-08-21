@@ -41,8 +41,13 @@ const titleCase = (str) => {
 const li = (item, prop) => {
   let _li = "";
   if (item[prop]) {
-    let val = item[prop].indexOf("href") > -1 ? item[prop] : "none";
-    _li = `<li>${titleCase(prop)} : ${val}</li>`;
+    if(item.type === 'link' ){
+        let val = item[prop].indexOf("href") > -1 ? item[prop] : "none";
+        _li = `<li>${titleCase(prop)} : ${val}</li>`;
+    } else {
+        let val = item[prop];
+        _li = `<li>${titleCase(prop)} : ${val}</li>`;
+    }
   }
   return _li;
 };
