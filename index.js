@@ -117,7 +117,7 @@ async function scrape() {
 
   const calendarReadyItems = items.map((item, index) => {
     let startDateTime = new Date(`${item[DATE]} ${item[TIME]} GMT-0500`);
-    let endDateTime = new Date(startDateTime.getTime() + hours(2));
+    let endDateTime = new Date(startDateTime.getTime() + hours(1));
     return {
       summary: `${item[NAME]}`,
       description: `<span> Oklahoma County ${item[NAME]}</span><ul>${li(
