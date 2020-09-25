@@ -119,3 +119,5 @@ const li = (item, prop) => {
   
     return calendarReadyItems;
   }
+
+module.exports = scrape;

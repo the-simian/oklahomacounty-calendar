@@ -4,16 +4,16 @@ const express = require("express");
 const app = express();
 const wakeUpDyno = require("./awaken-dyno.js");
 
+const scrape = require("./scrape");
+
 port = process.env.PORT || 5335;
 
 const DYNO_URL = `https://occc-calendar.herokuapp.com/`;
 
+let cachedData = null;
 
-let scrapedData = [];
-
-app.use("/", async (req, res, next) => {
+app.use("/scrape", async (req, res, next) => {
   let data = null;
-
   try {
     data = await scrape();
   } catch (err) {
