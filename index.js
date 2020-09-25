@@ -7,30 +7,8 @@ const wakeUpDyno = require("./awaken-dyno.js");
 port = process.env.PORT || 5335;
 
 const DYNO_URL = `https://occc-calendar.herokuapp.com/`;
-const URL = `https://oklahomacounty.legistar.com/Calendar.aspx`;
 
-const NAME = "Name";
-const DATE = "Meeting Date";
-const TIME = "Meeting Time";
-const LOCATION = "Meeting Location";
-const DETAILS = "Meeting Details";
-const AGENDA = "Agenda";
-const MINUTES = "Minutes";
-const VIDEO = "Video";
 
-const colDefinition = [
-  { name: NAME, type: "text" },
-  { name: DATE, type: "text" },
-  { name: "", type: "none" },
-  { name: TIME, type: "text" },
-  { name: LOCATION, type: "text" },
-  { name: DETAILS, type: "link" },
-  { name: AGENDA, type: "link" },
-  { name: MINUTES, type: "link" },
-  { name: VIDEO, type: "link" },
-];
-
-const hours = (n) => n * 60 * 60 * 1000;
 
 const titleCase = (str) => {
   str = str.toLowerCase().split(" ");
@@ -39,6 +17,7 @@ const titleCase = (str) => {
   }
   return str.join(" ");
 };
+
 
 const li = (item, prop) => {
   let _li = "";
@@ -155,5 +134,5 @@ app.use("/", async (req, res, next) => {
 
 app.listen(port, function () {
   console.log(`Running on ${port}`);
-  wakeUpDyno(DYNO_URL);
+  //wakeUpDyno(DYNO_URL);
 });
