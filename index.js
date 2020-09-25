@@ -21,9 +21,30 @@ app.use("/scrape", async (req, res, next) => {
   }
 
   if (data) {
+    cachedData = data;
     res.send(data);
   }
 
+  next();
+});
+
+app.use("/", async (req, res, next) => {
+  console.log("hit /");
+  if (cachedData) {
+    res.send(cachedData);
+  } else {
+    let data = null;
+    try {
+      data = await scrape();
+    } catch (err) {
+      res.send(err);
+    }
+
+    if (data) {
+      cachedData = data;
+      res.send(data);
+    }
+  }
   next();
 });
 
