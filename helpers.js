@@ -19,6 +19,9 @@ const AGENDA = "Agenda";
 const MINUTES = "Minutes";
 const VIDEO = "Video";
 
+const axios = require("axios");
+const cheerio = require("cheerio");
+
 const colDefinition = [
   { name: NAME, type: "text" },
   { name: DATE, type: "text" },
@@ -30,6 +33,17 @@ const colDefinition = [
   { name: MINUTES, type: "link" },
   { name: VIDEO, type: "link" },
 ];
+
+async function fetchHTML(url) {
+  console.log("fetching", url);
+  try {
+    const { data } = await axios.get(url);
+    console.log("done fetch", data);
+    return cheerio.load(data);
+  } catch (err) {
+    console.log(err);
+  }
+}
 
 module.exports = {
   URL,
@@ -44,4 +58,5 @@ module.exports = {
   hours,
   titleCase,
   colDefinition,
+  fetchHTML,
 };

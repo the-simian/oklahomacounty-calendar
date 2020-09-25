@@ -11,6 +11,7 @@ const {
   hours,
   titleCase,
   colDefinition,
+  fetchHTML,
 } = require("./helpers");
 
 const li = (item, prop) => {
@@ -27,12 +28,8 @@ const li = (item, prop) => {
   return _li;
 };
 
-async function fetchHTML(url) {
-  const { data } = await axios.get(url);
-  return cheerio.load(data);
-}
-
 async function scrape() {
+  console.log("running scrape");
   const $ = await fetchHTML(URL);
 
   const strategies = {
@@ -105,6 +102,7 @@ async function scrape() {
     };
   });
 
+  console.log("calendar Ready Items");
   return calendarReadyItems;
 }
 
