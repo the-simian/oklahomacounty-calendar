@@ -1,6 +1,8 @@
 const { google } = require("googleapis");
 let privatekey = require("./config/privatekey.json");
 
+const CALENDAR_ID = "q6ilmj54h7f11k6fdq5sp962k8@group.calendar.google.com";
+
 let jwtClient = new google.auth.JWT(
   privatekey.client_email,
   null,
@@ -23,7 +25,7 @@ let calendar = google.calendar("v3");
 calendar.events.list(
   {
     auth: jwtClient,
-    calendarId: "q6ilmj54h7f11k6fdq5sp962k8@group.calendar.google.com",
+    calendarId: CALENDAR_ID,
   },
   function (err, response) {
     if (err) {
@@ -31,7 +33,7 @@ calendar.events.list(
       return;
     }
 
-    console.log(response);
+    console.log(response.data.items);
   }
 );
 
