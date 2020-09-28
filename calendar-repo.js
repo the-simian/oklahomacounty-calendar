@@ -3,8 +3,6 @@ let privatekey = require("./config/privatekey.json");
 
 const CALENDAR_ID = "q6ilmj54h7f11k6fdq5sp962k8@group.calendar.google.com";
 
-const SAMPLE_DATA = require("./sample-data");
-
 let jwtClient = new google.auth.JWT(
   privatekey.client_email,
   null,
@@ -29,27 +27,26 @@ let calendarInfo = {
   calendarId: CALENDAR_ID,
   showDeleted: true,
 };
-calendar.events.list(calendarInfo, function (err, response) {
-  if (err) {
-    console.log("The API returned an error: " + err);
-    return;
-  }
 
-  //   console.log(response.data.items);
-  //   response.data.items.forEach(function (item) {
-  //     calendar.events.delete({
-  //       auth: jwtClient,
-  //       calendarId: CALENDAR_ID,
-  //       eventId: item.id,
-  //     });
-  //   });
-});
+async function getGcalEvents() {
+  return new Promise((resolve, reject) => {
+    calendar.events.list(
+      {
+        showDeleted: true,
+        ...calendarInfo,
+      },
+      function (err, response) {
+        if (err) {
+          console.log("The API returned an error: " + err);
+          reject(err);
+        }
+        resolve(response.data.items);
+      }
+    );
+  });
+}
 
-// SAMPLE_DATA.forEach((sample_event) => {
-//   console.log(sample_event);
-// });
-
-function scrapeToIinsert(scrapedEvent) {
+function scrapeToGcal(scrapedEvent) {
   const {
     id,
     summary,
@@ -59,7 +56,7 @@ function scrapeToIinsert(scrapedEvent) {
     endDateTime,
   } = scrapedEvent;
   return {
-    id: id,
+    id: id.substr(0, 1024),
     summary: summary,
     sendNotifications: true,
     sendUpdates: "all",
@@ -77,24 +74,50 @@ function scrapeToIinsert(scrapedEvent) {
   };
 }
 
-let testEvent = scrapeToIinsert(SAMPLE_DATA[1]);
+async function insertGcalEvent(calendarEvent) {
+  return new Promise((resolve, reject) => {
+    calendar.events.insert(
+      {
+        resource: calendarEvent,
+        ...calendarInfo,
+      },
+      (err, event) => {
+        if (err) {
+          console.log(
+            "There was an error contacting the Calendar service: " + err
+          );
+          return reject(err);
+        }
+        return resolve(event);
+      }
+    );
+  });
+}
 
-console.log(testEvent);
+async function updateGcalEvent(calendarEvent) {
+  return new Promise((resolve, reject) => {
+    calendar.events.update(
+      {
+        eventId: calendarEvent.id,
+        resource: calendarEvent,
+        ...calendarInfo,
+      },
+      (err, event) => {
+        if (err) {
+          console.log(
+            "There was an error contacting the Calendar service: " + err
+          );
+          return reject(err);
+        }
+        return resolve(event);
+      }
+    );
+  });
+}
 
-calendar.events.update(
-  {
-    auth: jwtClient,
-    eventId: testEvent.id,
-    calendarId: CALENDAR_ID,
-    resource: testEvent,
-  },
-  function (err, event) {
-    if (err) {
-      console.log("There was an error contacting the Calendar service: " + err);
-      return;
-    }
-    console.log("Event created: %s", event.htmlLink);
-  }
-);
-
-module.exports = {};
+module.exports = {
+  updateGcalEvent,
+  insertGcalEvent,
+  getGcalEvents,
+  scrapeToGcal,
+};
