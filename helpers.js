@@ -8,6 +8,11 @@ const titleCase = (str) => {
   return str.join(" ");
 };
 
+const clean = (str) => {
+  let _str = str.replace(/ +(?= )/g, "").replace(/(\r\n|\n|\r)/gm, "");
+  return _str.trim();
+};
+
 const URL = `https://oklahomacounty.legistar.com/Calendar.aspx`;
 
 const NAME = "Name";
@@ -38,7 +43,7 @@ async function fetchHTML(url) {
   console.log("fetching", url);
   try {
     const { data } = await axios.get(url);
-    console.log("done fetch", data);
+    //console.log("done fetch", data);
     return cheerio.load(data);
   } catch (err) {
     console.log(err);
@@ -59,4 +64,5 @@ module.exports = {
   titleCase,
   colDefinition,
   fetchHTML,
+  clean,
 };

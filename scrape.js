@@ -10,22 +10,25 @@ const {
   VIDEO,
   hours,
   titleCase,
+  clean,
   colDefinition,
   fetchHTML,
 } = require("./helpers");
+
+const { encodeId } = require("./encode-id");
 
 const li = (item, prop) => {
   let _li = "";
   if (item[prop]) {
     if (prop != LOCATION) {
       let val = item[prop].indexOf("href") > -1 ? item[prop] : "none";
-      _li = `<li>${titleCase(prop)} : ${val}</li>`;
+      _li = `<li>${titleCase(prop)}:${val}</li>`;
     } else {
       let val = item[prop];
-      _li = `<li>${titleCase(prop)} : ${val}</li>`;
+      _li = `<li>${titleCase(prop)}:${val}</li>`;
     }
   }
-  return _li;
+  return clean(_li);
 };
 
 async function scrape() {
@@ -46,7 +49,8 @@ async function scrape() {
                 `https://oklahomacounty.legistar.com/${fileLocation}`
               )
               .removeAttr("class")
-              .removeAttr("id");
+              .removeAttr("id")
+              .removeAttr("style");
           } else {
             $(el).remove();
           }
@@ -55,15 +59,19 @@ async function scrape() {
       $(cell)
         .find("img")
         .each(function (index, el) {
-          let _src = $(el).attr("src");
-          if (_src) {
-            $(el)
-              .attr("src", `https://oklahomacounty.legistar.com/${_src}`)
-              .removeAttr("class")
-              .removeAttr("id");
-          } else {
-            $(el).remove();
-          }
+          $(el).remove();
+        });
+
+      $(cell)
+        .find("font")
+        .each(function (index, el) {
+          $(el).replaceWith($(el).html());
+        });
+
+      $(cell)
+        .find("span")
+        .each(function (index, el) {
+          $(el).removeAttr("style");
         });
 
       return $(cell).html();
@@ -89,16 +97,25 @@ async function scrape() {
     let startDateTime = new Date(`${item[DATE]} ${item[TIME]} GMT-0500`);
     let endDateTime = new Date(startDateTime.getTime() + hours(1));
     return {
+      id: encodeId(`${item[NAME]}_${startDateTime.toISOString()}`),
       summary: `${item[NAME]}`,
-      description: `<span> Oklahoma County ${item[NAME]}</span><ul>${li(
-        item,
-        LOCATION
-      )}${li(item, DETAILS)}${li(item, AGENDA)}${(item, li(MINUTES))}${
-        (item, li(VIDEO))
-      }</ul>`,
-      location: `${item[LOCATION]} Oklahoma City, Oklahoma`,
+      description: clean(`
+      <span> Oklahoma County ${item[NAME]}</span>
+      <ul>
+        ${li(item, LOCATION)}
+        ${li(item, DETAILS)}
+        ${li(item, AGENDA)}
+        ${li(item, MINUTES)}
+        ${li(item, VIDEO)}
+      </ul>
+      `),
+      location: clean(`${item[LOCATION]}`),
       startDateTime: startDateTime.toISOString(),
       endDateTime: endDateTime.toISOString(),
+      details: clean(`${item[DETAILS]}`),
+      agenda: clean(`${item[AGENDA]}`),
+      minutes: clean(`${item[MINUTES]}`),
+      video: clean(`${item[VIDEO]}`),
     };
   });
 
