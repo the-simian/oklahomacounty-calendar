@@ -3,6 +3,8 @@ let privatekey = require("./config/privatekey.json");
 
 const CALENDAR_ID = "q6ilmj54h7f11k6fdq5sp962k8@group.calendar.google.com";
 
+const SAMPLE_DATA = require("./sample-data");
+
 let jwtClient = new google.auth.JWT(
   privatekey.client_email,
   null,
@@ -22,19 +24,21 @@ jwtClient.authorize(function (err, tokens) {
 
 //Google Calendar API
 let calendar = google.calendar("v3");
-calendar.events.list(
-  {
-    auth: jwtClient,
-    calendarId: CALENDAR_ID,
-  },
-  function (err, response) {
-    if (err) {
-      console.log("The API returned an error: " + err);
-      return;
-    }
-
-    console.log(response.data.items);
+let calendarInfo = {
+  auth: jwtClient,
+  calendarId: CALENDAR_ID,
+};
+calendar.events.list(calendarInfo, function (err, response) {
+  if (err) {
+    console.log("The API returned an error: " + err);
+    return;
   }
-);
+
+  console.log(response.data.items);
+});
+
+SAMPLE_DATA.forEach((sample_event) => {
+  console.log(sample_event);
+});
 
 module.exports = {};
