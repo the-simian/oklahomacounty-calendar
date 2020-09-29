@@ -64,6 +64,7 @@ function scrapeToGcal(scrapedEvent) {
     sendNotifications: true,
     sendUpdates: "all",
     supportsAttachments: true,
+    status: "confirmed",
     start: {
       dateTime: startDateTime,
       timezone: "America/Chicago",
