@@ -10,8 +10,6 @@ const DYNO_URL = `https://occc-calendar.herokuapp.com/`;
 const PASSPHRASE = "Laputan Machines";
 let WATERCSS = `https://cdn.jsdelivr.net/gh/kognise/water.css/dist/dark.min.css`;
 
-let lastUpdate = null;
-
 let head = `
       <head>
           <link rel="stylesheet" href="${WATERCSS}">
