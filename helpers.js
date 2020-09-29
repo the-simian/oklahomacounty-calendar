@@ -1,3 +1,6 @@
+const axios = require("axios");
+const cheerio = require("cheerio");
+
 const hours = (n) => n * 60 * 60 * 1000;
 
 const titleCase = (str) => {
@@ -24,8 +27,9 @@ const AGENDA = "Agenda";
 const MINUTES = "Minutes";
 const VIDEO = "Video";
 
-const axios = require("axios");
-const cheerio = require("cheerio");
+const THIS_MONTH = "This Month";
+const LAST_MONTH = "Last Month";
+const NEXT_MONTH = "Next Month";
 
 const colDefinition = [
   { name: NAME, type: "text" },
@@ -39,10 +43,20 @@ const colDefinition = [
   { name: VIDEO, type: "link" },
 ];
 
-async function fetchHTML(url) {
-  console.log("fetching", url);
+let CAL_YEAR_NAME = "Setting-736-Calendar Year";
+let CAL_YEAR_VALUE = "This Month";
+let CAL_BODY_NAME = "Setting-736-Calendar Body";
+let CAL_BODY_VALUE = "All";
+
+async function fetchHTML(url, month) {
+  console.log("fetching", url, month);
+  let _month = month || CAL_YEAR_VALUE;
   try {
-    const { data } = await axios.get(url);
+    const { data } = await axios.get(URL, {
+      headers: {
+        Cookie: `${CAL_YEAR_NAME}=${_month};`,
+      },
+    });
     //console.log("done fetch", data);
     return cheerio.load(data);
   } catch (err) {
@@ -51,6 +65,9 @@ async function fetchHTML(url) {
 }
 
 module.exports = {
+  LAST_MONTH,
+  THIS_MONTH,
+  NEXT_MONTH,
   URL,
   NAME,
   DATE,

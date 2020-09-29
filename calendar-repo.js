@@ -1,7 +1,7 @@
 const { google } = require("googleapis");
 let privatekey = require("./config/privatekey.json");
 
-const CALENDAR_ID = "q6ilmj54h7f11k6fdq5sp962k8@group.calendar.google.com";
+const CALENDAR_ID = "1vdop21cdv5vqiuld1ckf1849o@group.calendar.google.com";
 
 let jwtClient = new google.auth.JWT(
   privatekey.client_email,
@@ -25,14 +25,13 @@ let calendar = google.calendar("v3");
 let calendarInfo = {
   auth: jwtClient,
   calendarId: CALENDAR_ID,
-  showDeleted: true,
 };
 
 async function getGcalEvents() {
   return new Promise((resolve, reject) => {
     calendar.events.list(
       {
-        showDeleted: true,
+        showDeleted: false,
         ...calendarInfo,
       },
       function (err, response) {
@@ -54,9 +53,13 @@ function scrapeToGcal(scrapedEvent) {
     location,
     startDateTime,
     endDateTime,
+    details,
+    agenda,
+    minutes,
+    video,
   } = scrapedEvent;
   return {
-    id: id.substr(0, 1024),
+    id: id,
     summary: summary,
     sendNotifications: true,
     sendUpdates: "all",
@@ -74,6 +77,8 @@ function scrapeToGcal(scrapedEvent) {
   };
 }
 
+const OPS_THROTTLE = 500;
+
 async function insertGcalEvent(calendarEvent) {
   return new Promise((resolve, reject) => {
     calendar.events.insert(
@@ -86,9 +91,13 @@ async function insertGcalEvent(calendarEvent) {
           console.log(
             "There was an error contacting the Calendar service: " + err
           );
-          return reject(err);
+          setTimeout(function () {
+            return resolve(err);
+          }, OPS_THROTTLE);
         }
-        return resolve(event);
+        setTimeout(function () {
+          return resolve(event);
+        }, OPS_THROTTLE);
       }
     );
   });
@@ -107,9 +116,39 @@ async function updateGcalEvent(calendarEvent) {
           console.log(
             "There was an error contacting the Calendar service: " + err
           );
-          return reject(err);
+          setTimeout(function () {
+            return resolve(err);
+          }, OPS_THROTTLE);
         }
-        return resolve(event);
+        setTimeout(function () {
+          return resolve(event);
+        }, OPS_THROTTLE);
+      }
+    );
+  });
+}
+
+async function removeGcalEvent(calendarEvent) {
+  return new Promise((resolve, reject) => {
+    calendar.events.delete(
+      {
+        eventId: calendarEvent.id,
+        sendNotifications: false,
+        sendUpdates: "none",
+        ...calendarInfo,
+      },
+      (err, event) => {
+        if (err) {
+          console.log(
+            "There was an error contacting the Calendar service: " + err
+          );
+          setTimeout(function () {
+            return resolve(err);
+          }, OPS_THROTTLE);
+        }
+        setTimeout(function () {
+          return resolve(event);
+        }, OPS_THROTTLE);
       }
     );
   });
@@ -120,4 +159,5 @@ module.exports = {
   insertGcalEvent,
   getGcalEvents,
   scrapeToGcal,
+  removeGcalEvent,
 };

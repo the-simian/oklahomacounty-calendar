@@ -1,3 +1,4 @@
+const { format } = require("date-fns");
 const {
   URL,
   NAME,
@@ -13,6 +14,7 @@ const {
   clean,
   colDefinition,
   fetchHTML,
+  THIS_MONTH,
 } = require("./helpers");
 
 const { encodeId } = require("./encode-id");
@@ -31,9 +33,10 @@ const li = (item, prop) => {
   return clean(_li);
 };
 
-async function scrape() {
+async function scrape(month) {
+  let _month = month || THIS_MONTH;
   return new Promise(async (resolve, reject) => {
-    const $ = await fetchHTML(URL);
+    const $ = await fetchHTML(URL, _month);
     console.log("running scrape");
 
     const strategies = {
@@ -95,10 +98,16 @@ async function scrape() {
     });
 
     const calendarReadyItems = items.map((item, index) => {
+      //   console.log(index);
+      //   console.log(item);
       let startDateTime = new Date(`${item[DATE]} ${item[TIME]} GMT-0500`);
       let endDateTime = new Date(startDateTime.getTime() + hours(1));
+      const when = format(new Date(startDateTime), "yyyy.MMM.dd.hh.mm");
+      //   console.log(startDateTime);
+      //console.log(when, item[NAME]);
+      const _id = encodeId(`${when}`).substr(0, 1024);
       return {
-        id: encodeId(`${item[NAME]}_${startDateTime.toISOString()}`),
+        id: _id,
         summary: `${item[NAME]}`,
         description: clean(`
       <span> Oklahoma County ${item[NAME]}</span>
