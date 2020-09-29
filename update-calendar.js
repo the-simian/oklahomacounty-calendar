@@ -65,87 +65,98 @@ function noChangeBetween(n, e) {
   );
 }
 
-async function syncGcalToOCCC() {
-  const occcEvents = await getOCCCEvents();
-  const gCalEvents = await getGcalEvents();
-
-  console.log(`Found ${gCalEvents.length} Gcal Existing items`);
-
-  const gcalReadyCalendarEvents = occcEvents.map(scrapeToGcal);
-  console.log(gcalReadyCalendarEvents.map((x) => x.id));
-  const addedAndUpdated = await gcalReadyCalendarEvents.reduce(
-    async (prevEvent, nextEvent, index) => {
-      await prevEvent;
-      let existingEvent = existingGcalEvent(nextEvent, gCalEvents);
-      let percent = `${((index * 100) / gcalReadyCalendarEvents.length).toFixed(
-        2
-      )}%`;
-      let operation;
-      if (existingEvent) {
-        if (nextEvent.summary !== existingEvent.summary) {
-          nextEvent.description = updatedDescription(nextEvent, existingEvent);
-        }
-        operation = updateGcalEvent;
-        console.log(
-          index,
-          percent,
-          "UPDATE",
-          `${format(new Date(nextEvent.start.dateTime), "MM-dd hh:mm,bb")}`,
-          nextEvent.summary
-        );
-      } else {
-        operation = insertGcalEvent;
-        console.log(
-          index,
-          percent,
-          "CREATE",
-          `${format(new Date(nextEvent.start.dateTime), "MM-dd hh:mm,bb")}`,
-          nextEvent.summary
-        );
-      }
-      return operation(nextEvent);
-    },
-    Promise.resolve()
-  );
-
-  function shouldDeleteItem(gCalEvent) {
-    let mathchingEvents = gcalReadyCalendarEvents.filter(
-      (calReadEvent) => calReadEvent.id == gCalEvent.id
-    );
-
-    return mathchingEvents.length == 0;
-  }
-
-  const thingsToRemove = await gCalEvents.reduce(
-    async (prevEvent, nextEvent, index) => {
-      await prevEvent;
-
-      let percent = `${((index * 100) / gCalEvents.length).toFixed(2)}%`;
-
-      if (shouldDeleteItem(nextEvent)) {
-        console.log(
-          index,
-          percent,
-          "DELETING",
-          `${format(new Date(nextEvent.start.dateTime), "MM-dd hh:mm,bb")}`,
-          nextEvent.summary
-        );
-        return removeGcalEvent(nextEvent);
-      } else {
-        console.log(
-          index,
-          percent,
-          "NOT DELETING",
-          `${format(new Date(nextEvent.start.dateTime), "MM-dd hh:mm,bb")}`,
-          nextEvent.summary
-        );
-        return Promise.resolve();
-      }
-    },
-    Promise.resolve()
-  );
-
-  console.log("all done.");
+const reportTable = [];
+function report(items) {
+  reportTable.push(items);
+  console.log(...items);
 }
 
-syncGcalToOCCC();
+function shouldDeleteItem(gCalEvent, gcalReadyCalendarEvents) {
+  let mathchingEvents = gcalReadyCalendarEvents.filter(
+    (calReadEvent) => calReadEvent.id == gCalEvent.id
+  );
+
+  return mathchingEvents.length == 0;
+}
+
+async function syncGcalToOCCC() {
+  return new Promise(async (resolve, reject) => {
+    const occcEvents = await getOCCCEvents();
+    const gCalEvents = await getGcalEvents();
+    console.log(`Found ${gCalEvents.length} Gcal Existing items`);
+    const gcalReadyCalendarEvents = occcEvents.map(scrapeToGcal);
+
+    const addedAndUpdated = await gcalReadyCalendarEvents.reduce(
+      async (prevEvent, nextEvent, index) => {
+        await prevEvent;
+        let existingEvent = existingGcalEvent(nextEvent, gCalEvents);
+        let percent = `${(
+          (index * 100) /
+          gcalReadyCalendarEvents.length
+        ).toFixed(2)}%`;
+        let operation;
+        if (existingEvent) {
+          if (nextEvent.summary !== existingEvent.summary) {
+            nextEvent.description = updatedDescription(
+              nextEvent,
+              existingEvent
+            );
+          }
+          operation = updateGcalEvent;
+          report([
+            index,
+            percent,
+            "UPDATE",
+            `${format(new Date(nextEvent.start.dateTime), "MM-dd hh:mm,bb")}`,
+            nextEvent.summary,
+          ]);
+        } else {
+          operation = insertGcalEvent;
+          report([
+            index,
+            percent,
+            "CREATE",
+            `${format(new Date(nextEvent.start.dateTime), "MM-dd hh:mm,bb")}`,
+            nextEvent.summary,
+          ]);
+        }
+        return operation(nextEvent);
+      },
+      Promise.resolve()
+    );
+
+    const thingsToRemove = await gCalEvents.reduce(
+      async (prevEvent, nextEvent, index) => {
+        await prevEvent;
+
+        let percent = `${((index * 100) / gCalEvents.length).toFixed(2)}%`;
+
+        if (shouldDeleteItem(nextEvent, gcalReadyCalendarEvents)) {
+          report([
+            index,
+            percent,
+            "CREATE",
+            `${format(new Date(nextEvent.start.dateTime), "MM-dd hh:mm,bb")}`,
+            nextEvent.summary,
+          ]);
+
+          return removeGcalEvent(nextEvent);
+        } else {
+          report([
+            index,
+            percent,
+            "NOT DELETING",
+            `${format(new Date(nextEvent.start.dateTime), "MM-dd hh:mm,bb")}`,
+            nextEvent.summary,
+          ]);
+          return Promise.resolve();
+        }
+      },
+      Promise.resolve()
+    );
+
+    resolve(reportTable);
+  });
+}
+
+module.exports = syncGcalToOCCC;
